@@ -1,7 +1,6 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 
-const token = "NzA3MjEzMzc3OTE4NzMwMjkx.XrFh1g.PAe0rmB8u5vOw7BAk5yJm598oX8";
 let users = [];
 let channel;
 let anwesenheitBotId = '707213377918730291';
@@ -118,4 +117,4 @@ function compare(a, b) {
     return comparison;
   }
 
-client.login(token);
+client.login(process.env.BOT_TOKEN);
