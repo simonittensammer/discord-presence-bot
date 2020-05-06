@@ -11,8 +11,11 @@ client.on('ready', () => console.log(`Logged in as ${client.user.tag}!`));
 
 // Message event
 client.on('message', msg => {
+    if (msg.member.id === client.user.id) {
+        return;
+    }
     if (!(process.env.ALLOWED_CHANNEL_IDS.split(';') || []).includes(msg.channel.id)) {
-        msg.channel.send('Wupsi-dupsi, falscher Channel?').catch(console.log);
+        msg.channel.send('Wupsi-dupsi, falscher channel?').catch(console.log);
         return;
     }
 
