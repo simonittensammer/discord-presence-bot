@@ -18,6 +18,10 @@ client.on('message', msg => {
     const msgContent = msg.content;
     if (msgContent.charAt(0) === '!' && keyWords.indexOf(msgContent.substring(1).toLowerCase()) !== -1) {
         
+        if (!msg.member.hasPermission('lehrer') && !msg.member.hasPermission('klassensprecher')) {
+            msg.channel.send('Bissl Lehrer spielen oder wie?').catch(console.log);
+            return;
+        }
         if (!(process.env.ALLOWED_CHANNEL_IDS.split(';') || []).includes(msg.channel.id)) {
             msg.channel.send('Wupsi-dupsi, falscher channel?').catch(console.log);
             return;
