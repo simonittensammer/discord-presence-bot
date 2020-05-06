@@ -1,120 +1,81 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 
-let users = [];
-let channel;
-let anwesenheitBotId = '707213377918730291';
-let anwesenheitMsg;
-let studentRole = 'schueler';
+let students = [];
+let lastMessage = null;
+let studentRoleName = 'schueler';
+let keyWords = ['anwesenheit', 'a'];
 
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-});
+// Start event
+client.on('ready', () => console.log(`Logged in as ${client.user.tag}!`));
 
+// Message event
 client.on('message', msg => {
-    if (msg.content.startsWith('!anwesenheit') || msg.content.startsWith('!Anwesenheit') || msg.content.startsWith('!ANWESENHEIT') || msg.content === '!a') {
+    const msgContent = msg.content;
+    if (msgContent.charAt(0) === '!' && keyWords.indexOf(msg.content.substring(1).toLowerCase())) {
+        msg.guild.roles.cache.each(role => {
+            if (role.name === studentRoleName) {
+                students = role.members.map(member => ({
+                    id: member.id,
+                    displayName: member.displayName,
+                    isPresent: false
+                }));
+                students.sort(compareName);
 
-        users = [];
-        channel = msg.channel;
-
-        //console.log('***********************************************');
-        msg.guild.roles.cache.every((value, key) => {
-            if(value.name === studentRole) {
-                value.members.forEach(member => users.push({displayName: member.displayName, id: member.user.id, anwesend: false})); //member.user.username
-                return false;
+                msg.channel.send(`\`\`\`diff${getStudentsText(students)}\`\`\``).then(msg => {
+                    lastMessage = msg;
+                    msg.react("👍").catch(console.error);
+                });
             }
-            return true;
-        });
-        
-        users.sort(compare);
-        //console.log(users);
-        //console.log('***********************************************');
-
-        /*
-        channel.send(
-            '>>> Please react with :thumbsup: to this message'
-        ).then(function (msg) {
-
-            msg.react("👍")
-                .then()
-                .catch(console.error);
-        });
-        */
-
-        channel.send(
-            '```diff' +
-            getStudents() +
-            '```'
-        ).then(function (msg) {
-            msg.react("👍")
-                .then()
-                .catch(console.error);
         });
     }
 });
 
-client.on('messageReactionAdd', async (reaction, user) => {
-    
-	if (reaction.partial) {
-		try {
-			await reaction.fetch();
-		} catch (error) {
-			console.log('Something went wrong when fetching the message: ', error);
-			return;
-		}
-	}
+// Reaction Event
+client.on('messageReactionAdd', handleReactionEvent(true));
+client.on('messageReactionRemove', handleReactionEvent(false))
 
-    if (user.id != anwesenheitBotId) {
-        //console.log(user);
-        for(let i = 0; i < users.length; i++) {
-            if (users[i].id == user.id) {
-                users[i].anwesend = true;
+// Login
+client.login(process.env.BOT_TOKEN).catch(console.log);
+
+////////////////////
+// Help functions //
+////////////////////
+
+function handleReactionEvent(isAddedEvent) {
+    return async (reaction, user) => {
+        if (reaction.partial) {
+            try {
+                await reaction.fetch();
+            } catch (error) {
+                console.log('Something went wrong when fetching the message: ', error);
+                return;
             }
         }
 
-        //console.log(reaction.message.id);
-    } else {
-        anwesenheitMsg = user.lastMessage;
-    }
-
-    anwesenheitMsg.edit(
-        '```diff' +
-        getStudents() +
-        '```'
-    );
-});
-
-
-function getStudents() {
-    let students = '';
-
-    if(users.length === 0) {
-        return '\nNo students found';
-    } else {
-        for(let i = 0; i < users.length; i++) {
-            if(users[i].anwesend) {
-                students += '\n+ ' + users[i].displayName;
-            } else {
-                students += '\n- ' + users[i].displayName;
+        if (reaction.message.id === lastMessage.id) {
+            for (const student of students) {
+                if (student.id === user.id) {
+                    student.isPresent = isAddedEvent;
+                }
             }
+            lastMessage.edit('```diff' + getStudentsText(students) + '```').catch(console.log);
         }
     }
-
-    return students;
 }
 
-function compare(a, b) {
-    // Use toUpperCase() to ignore character casing
-    const nameA = a.displayName.toUpperCase();
-    const nameB = b.displayName.toUpperCase();
-  
-    let comparison = 0;
-    if (nameA > nameB) {
-      comparison = 1;
-    } else if (nameA < nameB) {
-      comparison = -1;
-    }
-    return comparison;
-  }
+function getStudentsText(students) {
+    return students.reduce((studentText, student) => studentText += `\n${student.isPresent ? '+' : '-'} ${student.displayName}`, '');
+}
 
-client.login(process.env.BOT_TOKEN);
+function compareName(a, b) {
+    const nameA = a.displayName;
+    const nameB = b.displayName;
+
+    if (nameA > nameB) {
+        return 1;
+    } else if (nameA < nameB) {
+        return -1;
+    }
+    return 0;
+}
