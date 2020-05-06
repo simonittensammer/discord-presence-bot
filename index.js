@@ -14,13 +14,15 @@ client.on('message', msg => {
     if (msg.member.id === client.user.id) {
         return;
     }
-    if (!(process.env.ALLOWED_CHANNEL_IDS.split(';') || []).includes(msg.channel.id)) {
-        msg.channel.send('Wupsi-dupsi, falscher channel?').catch(console.log);
-        return;
-    }
 
     const msgContent = msg.content;
     if (msgContent.charAt(0) === '!' && keyWords.indexOf(msgContent.substring(1).toLowerCase()) !== -1) {
+        
+        if (!(process.env.ALLOWED_CHANNEL_IDS.split(';') || []).includes(msg.channel.id)) {
+            msg.channel.send('Wupsi-dupsi, falscher channel?').catch(console.log);
+            return;
+        }
+
         msg.guild.roles.cache.each(role => {
             if (role.name === studentRoleName) {
                 students = role.members.map(member => ({
