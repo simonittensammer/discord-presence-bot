@@ -12,7 +12,7 @@ client.on('ready', () => console.log(`Logged in as ${client.user.tag}!`));
 // Message event
 client.on('message', msg => {
     const msgContent = msg.content;
-    if (msgContent.charAt(0) === '!' && keyWords.indexOf(msg.content.substring(1).toLowerCase())) {
+    if (msgContent.charAt(0) === '!' && keyWords.indexOf(msg.content.substring(1).toLowerCase()) !== -1) {
         msg.guild.roles.cache.each(role => {
             if (role.name === studentRoleName) {
                 students = role.members.map(member => ({
