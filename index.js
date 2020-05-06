@@ -17,7 +17,7 @@ client.on('message', msg => {
     }
 
     const msgContent = msg.content;
-    if (msgContent.charAt(0) === '!' && keyWords.indexOf(msg.content.substring(1).toLowerCase()) !== -1) {
+    if (msgContent.charAt(0) === '!' && keyWords.indexOf(msgContent.substring(1).toLowerCase()) !== -1) {
         msg.guild.roles.cache.each(role => {
             if (role.name === studentRoleName) {
                 students = role.members.map(member => ({
@@ -29,7 +29,7 @@ client.on('message', msg => {
 
                 msg.channel.send(`\`\`\`diff${getStudentsText(students)}\`\`\``).then(msg => {
                     lastMessage = msg;
-                    msg.react("👍").catch(console.error);
+                    msg.react('👍').catch(console.log);
                 });
             }
         });
